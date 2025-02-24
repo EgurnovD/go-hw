@@ -40,10 +40,12 @@ func reportHandler(c *gin.Context) {
 func rateLimiter() gin.HandlerFunc {
 	limiter := rate.NewLimiter(5, 5)
 	return func(c *gin.Context) {
-		if limiter.Allow() {
+		if c.Request.URL.Path == common.HealthRoute || limiter.Allow() {
 			c.Next()
 		} else {
-			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too Many Requests"})
+			status := http.StatusTooManyRequests
+			c.JSON(status, gin.H{"error": "Too Many Requests"})
+			stats.Inc(status)
 			c.Abort()
 		}
 	}
